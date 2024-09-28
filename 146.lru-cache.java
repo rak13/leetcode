@@ -70,16 +70,86 @@
 // @lc code=start
 class LRUCache {
 
-    public LRUCache(int capacity) {
-        
+    class Node {
+        int key;
+        int val;
+
+        Node next;
+        Node prev;
+
+        Node() {}
+
+        Node(int k, int v) {
+            key = k;
+            val = v;
+        }
     }
-    
-    public int get(int key) {
+
+    Map<Integer, Node> map = new HashMap<>();
+    Node start = new Node();
+    Node end = new Node();
+
+    int MAX_CAP;
+
+    public LRUCache(int capacity) {
+        MAX_CAP = capacity;
+        start.next = end;
+        end.prev = start;
+    }
+
+    public void addNodeToFront(Node node) {
+        Node curFront = start.next;
         
+        start.next = node;
+        node.prev = start;
+
+        node.next = curFront;
+        curFront.prev = node;
+    }
+
+    public Node deleteNode(Node node) {
+        Node prev = node.prev;
+        Node next = node.next;
+
+        prev.next = next;
+        next.prev = prev;
+
+        return node;
+    }
+
+    public void bringToFront(Node node) {
+        deleteNode(node);
+        addNodeToFront(node);
+    }
+
+
+    public int get(int key) {
+        if(map.containsKey(key)) {
+            Node node = map.get(key);
+            bringToFront(node);
+            return node.val;
+        }
+        return -1;
     }
     
     public void put(int key, int value) {
-        
+        if(map.containsKey(key)) {
+            Node node = map.get(key);
+            node.val = value;
+            bringToFront(node);
+        } else {
+            if(MAX_CAP == 0) return;
+
+            Node node = new Node(key, value);
+            addNodeToFront(node);
+            map.put(key, node);
+
+            if(map.size() > MAX_CAP) {
+                Node toDelete = end.prev;
+                map.remove(toDelete.key);
+                deleteNode(toDelete);
+            }
+        }
     }
 }
 
